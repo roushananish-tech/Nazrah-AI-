@@ -11,7 +11,7 @@ const apiRoutes     = require('./routes/api');
 const { startScheduler } = require('./scheduler');
 
 const app  = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // ── Middleware ────────────────────────────────────────────────
 app.use(helmet({ contentSecurityPolicy: false }));
