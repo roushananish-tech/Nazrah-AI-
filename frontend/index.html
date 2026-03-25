@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nazrah · Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#060608;--bg2:#0e0e12;--bg3:#141418;--bg4:#1a1a20;--border:#1e1e26;--border2:#2a2a36;--text:#eeeef5;--text2:#8888aa;--text3:#44445a;--gold:#d4920a;--gold2:#f0b030;--gold3:#ffd060;--teal:#0d9e96;--teal2:#2cc4bc;--teal3:#7eeae4;--coral:#c04030;--coral2:#e86050;--coral3:#ff9080;--purple:#6040c0;--purple2:#8060e0;--purple3:#b090ff;--green:#1a8040;--green2:#30b060;--green3:#60e090;--red:#b02020;--red2:#d84040;--red3:#ff7060;--amber:#9a6000;--amber2:#c08010;--amber3:#f0b040;--fn:'Syne',sans-serif;--mono:'IBM Plex Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--fn);min-height:100vh;font-size:13px}
+
+/* TOPBAR */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;height:50px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.tl{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text2)}
+.tl-dot{width:8px;height:8px;background:var(--gold);border-radius:50%}
+.tl strong{color:var(--gold)}
+.tr{display:flex;align-items:center;gap:8px}
+.badge{padding:3px 8px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1px solid}
+.b-gold{background:rgba(212,146,10,.1);color:var(--gold3);border-color:rgba(212,146,10,.3)}
+.b-red{background:rgba(176,32,32,.1);color:var(--red3);border-color:rgba(176,32,32,.3)}
+.b-green{background:rgba(26,128,64,.1);color:var(--green3);border-color:rgba(26,128,64,.3)}
+.b-teal{background:rgba(13,158,150,.1);color:var(--teal3);border-color:rgba(13,158,150,.3)}
+
+/* FETCH BAR */
+.fetch-bar{background:var(--bg3);border-bottom:1px solid var(--border);padding:8px 24px;display:flex;align-items:center;gap:12px}
+.fetch-status{font-family:var(--mono);font-size:10px;color:var(--text3);flex:1}
+.fetch-status strong{color:var(--teal2)}
+.fetch-btn{background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text2);font-family:var(--mono);font-size:9px;padding:5px 12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px}
+.fetch-btn:hover{border-color:var(--gold);color:var(--gold)}
+.fetch-btn:disabled{opacity:.4;cursor:not-allowed}
+.fetch-btn.loading{border-color:var(--teal);color:var(--teal2)}
+.spin{display:inline-block;animation:spin .8s linear infinite;font-size:11px}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* HERO */
+.hero{padding:28px 24px 20px;border-bottom:1px solid var(--border)}
+.hero-eye{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase;margin-bottom:8px}
+.hero-h1{font-size:28px;font-weight:800;letter-spacing:-.025em;color:var(--text)}
+.hero-h1 em{color:var(--gold);font-style:normal}
+.hero-sub{font-size:11px;color:var(--text2);margin-top:6px;max-width:500px}
+
+/* GOAL BAR */
+.gw{margin-top:20px;max-width:700px}
+.gw-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:5px}
+.gw-lbl{font-family:var(--mono);font-size:8px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:3px}
+.gw-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--gold2)}
+.gw-track{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.gw-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold3));border-radius:2px;transition:width .8s ease;width:0}
+.gw-ticks{display:flex;justify-content:space-between;margin-top:4px}
+.gw-tick{font-family:var(--mono);font-size:8px;color:var(--text3)}
+
+/* KPI STRIP */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.kpi{background:var(--bg2);padding:14px 18px}
+.kpi-l{font-family:var(--mono);font-size:7.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.kpi-v{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--text)}
+.kpi-v.gold{color:var(--gold2)}.kpi-v.red{color:var(--red2)}.kpi-v.green{color:var(--green2)}.kpi-v.teal{color:var(--teal2)}.kpi-v.amber{color:var(--amber2)}
+.kpi-s{font-size:9px;color:var(--text3);margin-top:3px}
+
+/* TABS */
+.tabs{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;display:flex;overflow-x:auto}
+.tab{font-family:var(--fn);font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);background:none;border:none;border-bottom:2px solid transparent;padding:13px 16px;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab:hover{color:var(--text2)}.tab.active{color:var(--gold2);border-bottom-color:var(--gold)}
+
+/* CONTENT */
+.content{padding:24px}
+.panel{display:none}.panel.active{display:block}
+
+/* SECTION HDR */
+.sh{font-size:8.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.sh::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* TASK SYSTEM */
+.task-section{margin-bottom:20px}
+.ts-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.ts-title{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.ts-title.crit{color:var(--red2)}.ts-title.high{color:var(--amber2)}.ts-title.maint{color:var(--teal2)}
+.ts-count{font-family:var(--mono);font-size:9px;color:var(--text3)}
+.tasks{display:flex;flex-direction:column;gap:6px}
+.task{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:12px 14px;cursor:pointer;transition:border-color .15s;display:flex;gap:10px;align-items:flex-start}
+.task:hover{border-color:var(--border2)}
+.task.done{opacity:.28}
+.task-cb{width:14px;height:14px;border:1.5px solid var(--border2);border-radius:3px;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s}
+.task.done .task-cb{background:var(--green2);border-color:var(--green2);color:#fff}
+.task-body{flex:1}
+.task-title{font-size:11px;color:var(--text);line-height:1.5;margin-bottom:5px}
+.task-tags{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.tag{font-family:var(--mono);font-size:8px;padding:2px 5px;border-radius:2px;border:1px solid}
+.tag-telegram{background:rgba(13,158,150,.09);color:var(--teal3);border-color:rgba(13,158,150,.25)}
+.tag-instagram,.tag-insta{background:rgba(192,64,48,.09);color:var(--coral3);border-color:rgba(192,64,48,.25)}
+.tag-fashion,.tag-website{background:rgba(96,64,192,.09);color:var(--purple3);border-color:rgba(96,64,192,.25)}
+.tag-media{background:rgba(13,158,150,.09);color:var(--teal2);border-color:rgba(13,158,150,.2)}
+.tag-trading{background:rgba(212,146,10,.09);color:var(--gold3);border-color:rgba(212,146,10,.25)}
+.tag-crit,.tag-critical{background:rgba(176,32,32,.1);color:var(--red3);border-color:rgba(176,32,32,.3)}
+.tag-manual{background:rgba(68,68,90,.15);color:var(--text3);border-color:var(--border2)}
+.tag-auto{background:rgba(13,158,150,.07);color:var(--teal2);border-color:rgba(13,158,150,.15)}
+.tag-time,.tag-est{font-family:var(--mono);font-size:8px;color:var(--text3)}
+.task-del{font-size:12px;color:var(--text3);margin-left:auto;padding:2px 6px;border-radius:3px;display:none}
+.task:hover .task-del{display:block}.task-del:hover{color:var(--red2)}
+
+/* ADD TASK FORM */
+.add-task-btn{background:none;border:1px dashed var(--border2);border-radius:6px;color:var(--text3);font-family:var(--mono);font-size:10px;padding:9px 14px;cursor:pointer;width:100%;text-align:left;margin-top:8px;transition:all .2s}
+.add-task-btn:hover{border-color:var(--gold);color:var(--gold)}
+.add-task-form{background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:14px;margin-top:8px;display:none}
+.add-task-form.show{display:block}
+.aft-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.aft-inp{background:var(--bg4);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--fn);font-size:11px;padding:7px 10px;flex:1;min-width:120px;outline:none}
+.aft-inp:focus{border-color:var(--gold)}
+.aft-sel{background:var(--bg4);border:1px solid var(--border2);border-radius:4px;color:var(--text2);font-family:var(--mono);font-size:10px;padding:7px 10px;outline:none}
+.aft-submit{background:var(--gold);border:none;border-radius:4px;color:var(--bg);font-family:var(--fn);font-size:11px;font-weight:700;padding:7px 16px;cursor:pointer}
+
+/* PLATFORM CARDS */
+.plat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.plat-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.plat-head{padding:12px 14px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start}
+.plat-name{font-size:12px;font-weight:700;color:var(--text)}
+.plat-handle{font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:2px}
+.plat-status{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9px}
+.sdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.sdot.live{background:var(--green2)}.sdot.warn{background:var(--amber2)}.sdot.bad{background:var(--red2)}
+.plat-body{padding:14px}
+.metrics-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.mbox{background:var(--bg4);border-radius:4px;padding:8px 10px}
+.ml{font-family:var(--mono);font-size:7px;color:var(--text3);margin-bottom:2px;text-transform:uppercase;letter-spacing:.08em}
+.mv{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text)}
+.mv.good{color:var(--green2)}.mv.warn{color:var(--amber2)}.mv.bad{color:var(--red2)}.mv.gold{color:var(--gold2)}
+.issues{display:flex;flex-direction:column;gap:5px}
+.issue{display:flex;gap:7px;padding:7px 9px;border-radius:4px;align-items:flex-start}
+.issue.fail{background:rgba(176,32,32,.07);border-left:2px solid var(--red2)}
+.issue.warn{background:rgba(154,96,0,.07);border-left:2px solid var(--amber2)}
+.issue.pass{background:rgba(26,128,64,.07);border-left:2px solid var(--green2)}
+.issue-ic{font-size:10px;flex-shrink:0;width:14px;text-align:center;margin-top:1px}
+.issue-t{font-size:10px;font-weight:700;color:var(--text);margin-bottom:1px}
+.issue-d{font-size:9px;color:var(--text2);line-height:1.5}
+
+/* CHARTS */
+.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:18px;margin-bottom:16px}
+.cc-title{font-size:10px;font-weight:700;color:var(--text2);margin-bottom:2px}
+.cc-sub{font-family:var(--mono);font-size:8px;color:var(--text3);margin-bottom:14px}
+
+/* REVENUE LOG */
+.rev-form{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;align-items:flex-end}
+.rev-form-title{font-family:var(--mono);font-size:9px;color:var(--text3);width:100%;text-transform:uppercase;letter-spacing:.1em}
+.rev-inp,.rev-sel{background:var(--bg4);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:11px;padding:7px 10px;outline:none}
+.rev-inp:focus,.rev-sel:focus{border-color:var(--gold)}
+.rev-submit{background:var(--gold);border:none;border-radius:4px;color:var(--bg);font-family:var(--fn);font-size:11px;font-weight:700;padding:7px 16px;cursor:pointer}
+
+/* HEALTH SCORE */
+.score-ring{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.score-item{text-align:center}
+.score-lbl{font-family:var(--mono);font-size:8px;color:var(--text3);margin-top:5px;text-transform:uppercase}
+.score-num{font-family:var(--mono);font-size:22px;font-weight:700}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px}
+.card-title{font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+
+/* LOADING STATE */
+.loading-overlay{position:fixed;inset:0;background:rgba(6,6,8,.85);display:flex;align-items:center;justify-content:center;z-index:999;display:none}
+.loading-overlay.show{display:flex}
+.loading-box{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:32px 40px;text-align:center}
+.loading-box p{font-family:var(--mono);font-size:12px;color:var(--text2);margin-top:10px}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:10px 16px;font-family:var(--mono);font-size:11px;color:var(--text2);z-index:500;transform:translateY(60px);opacity:0;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:rgba(26,128,64,.4);color:var(--green3)}
+.toast.error{border-color:rgba(176,32,32,.4);color:var(--red3)}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+@media(max-width:860px){
+  .kpis,.plat-grid,.two-col{grid-template-columns:1fr}
+  .hero,.content{padding:16px}
+  .topbar,.tabs{padding:0 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-box">
+    <div style="font-size:28px">⚡</div>
+    <p id="loading-msg">Fetching live platform data...</p>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tl"><div class="tl-dot"></div>Niraj / <strong>Command Center</strong></div>
+  <div class="tr">
+    <span style="font-family:var(--mono);font-size:9px;color:var(--text3)" id="top-date">—</span>
+    <span class="badge b-red" id="lag-badge">— lagging</span>
+    <span class="badge b-gold">₹2L Mission</span>
+  </div>
+</div>
+
+<!-- FETCH BAR -->
+<div class="fetch-bar">
+  <div class="fetch-status">Last auto-fetch: <strong id="last-fetch-time">Never</strong> · Next: 8am IST daily</div>
+  <button class="fetch-btn" id="fetch-btn" onclick="triggerFetch()">
+    <span>⟳</span> Refresh Now
+  </button>
+  <span style="font-family:var(--mono);font-size:9px;color:var(--text3)" id="fetch-status-label"></span>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eye">Live Backend Dashboard · Auto-updating every 24hrs</div>
+  <div class="hero-h1">Niraj's <em>Command Center</em></div>
+  <div class="hero-sub">All data auto-fetched from your platforms. Tasks auto-generated from what's actually lagging.</div>
+  <div class="gw">
+    <div class="gw-top">
+      <div><div class="gw-lbl">Total earned so far</div><div class="gw-val" id="earned-disp">₹0</div></div>
+      <div style="text-align:right"><div class="gw-lbl">Progress</div><div class="gw-val" id="gw-pct">0%</div></div>
+    </div>
+    <div class="gw-track"><div class="gw-fill" id="gw-fill"></div></div>
+    <div class="gw-ticks"><span class="gw-tick">₹0</span><span class="gw-tick">₹50K</span><span class="gw-tick">₹1L</span><span class="gw-tick">₹1.5L</span><span class="gw-tick">₹2L</span></div>
+  </div>
+</div>
+
+<!-- KPIS -->
+<div class="kpis">
+  <div class="kpi"><div class="kpi-l">Telegram Subs</div><div class="kpi-v amber" id="kpi-subs">—</div><div class="kpi-s" id="kpi-subs-s">Loading...</div></div>
+  <div class="kpi"><div class="kpi-l">Latest Post Views</div><div class="kpi-v red" id="kpi-views">—</div><div class="kpi-s" id="kpi-views-s">Loading...</div></div>
+  <div class="kpi"><div class="kpi-l">View Trend</div><div class="kpi-v" id="kpi-trend">—</div><div class="kpi-s" id="kpi-trend-s">—</div></div>
+  <div class="kpi"><div class="kpi-l">Website Score</div><div class="kpi-v" id="kpi-wscore">—</div><div class="kpi-s" id="kpi-wscore-s">—</div></div>
+  <div class="kpi"><div class="kpi-l">Tasks Lagging</div><div class="kpi-v red" id="kpi-tasks">—</div><div class="kpi-s" id="kpi-tasks-s">—</div></div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="sw('tasks',this)">Today's Tasks</button>
+  <button class="tab" onclick="sw('platforms',this)">Platform Intel</button>
+  <button class="tab" onclick="sw('revenue',this)">Revenue</button>
+  <button class="tab" onclick="sw('history',this)">View History</button>
+</div>
+
+<div class="content">
+
+<!-- TASKS TAB -->
+<div class="panel active" id="tab-tasks">
+  <div class="task-section">
+    <div class="ts-head"><div class="ts-title crit" id="crit-head">🔴 Critical</div><div class="ts-count" id="crit-count">—</div></div>
+    <div class="tasks" id="crit-tasks"></div>
+    <button class="add-task-btn" onclick="showAddTask('critical')">+ Add critical task</button>
+    <div class="add-task-form" id="add-form-critical">
+      <div class="aft-row">
+        <input class="aft-inp" placeholder="Task description..." id="aft-title-critical" style="flex:3">
+        <select class="aft-sel" id="aft-source-critical">
+          <option value="telegram">Telegram</option><option value="website">Website</option>
+          <option value="fashion">AI Fashion</option><option value="media">Media</option>
+          <option value="trading">Trading</option><option value="instagram">Instagram</option>
+        </select>
+        <input class="aft-inp" placeholder="Est. time" id="aft-time-critical" style="max-width:100px">
+        <button class="aft-submit" onclick="addTask('critical')">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="task-section">
+    <div class="ts-head"><div class="ts-title high" id="high-head">🟡 High Priority</div><div class="ts-count" id="high-count">—</div></div>
+    <div class="tasks" id="high-tasks"></div>
+    <button class="add-task-btn" onclick="showAddTask('high')">+ Add high priority task</button>
+    <div class="add-task-form" id="add-form-high">
+      <div class="aft-row">
+        <input class="aft-inp" placeholder="Task description..." id="aft-title-high" style="flex:3">
+        <select class="aft-sel" id="aft-source-high">
+          <option value="telegram">Telegram</option><option value="website">Website</option>
+          <option value="fashion">AI Fashion</option><option value="media">Media</option>
+          <option value="trading">Trading</option><option value="instagram">Instagram</option>
+        </select>
+        <input class="aft-inp" placeholder="Est. time" id="aft-time-high" style="max-width:100px">
+        <button class="aft-submit" onclick="addTask('high')">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="task-section">
+    <div class="ts-head"><div class="ts-title maint">🔵 Daily Maintenance</div><div class="ts-count" id="maint-count">—</div></div>
+    <div class="tasks" id="maint-tasks"></div>
+  </div>
+
+  <div class="task-section">
+    <div class="ts-head"><div class="ts-title" style="color:var(--text3)">✓ Done Today</div><div class="ts-count" id="done-count">—</div></div>
+    <div class="tasks" id="done-tasks"></div>
+  </div>
+</div>
+
+<!-- PLATFORM TAB -->
+<div class="panel" id="tab-platforms">
+  <div class="sh">Live Platform Intelligence</div>
+  <div class="plat-grid">
+    <!-- Telegram -->
+    <div class="plat-card">
+      <div class="plat-head">
+        <div><div class="plat-name">Nazrah Open Campus</div><div class="plat-handle">@blockbullacademy · Fetched live</div></div>
+        <div class="plat-status"><div class="sdot" id="tg-sdot"></div><span id="tg-status-text" style="font-family:var(--mono);font-size:9px">Loading</span></div>
+      </div>
+      <div class="plat-body">
+        <div class="metrics-row">
+          <div class="mbox"><div class="ml">Subscribers</div><div class="mv warn" id="tg-subs">—</div></div>
+          <div class="mbox"><div class="ml">Latest Views</div><div class="mv" id="tg-views">—</div></div>
+          <div class="mbox"><div class="ml">Avg 10 Posts</div><div class="mv" id="tg-avg">—</div></div>
+          <div class="mbox"><div class="ml">Total Posts</div><div class="mv gold" id="tg-posts">—</div></div>
+          <div class="mbox"><div class="ml">Photos</div><div class="mv" id="tg-photos">—</div></div>
+          <div class="mbox"><div class="ml">Trend</div><div class="mv" id="tg-trend">—</div></div>
+        </div>
+        <div class="issues" id="tg-issues"></div>
+      </div>
+    </div>
+    <!-- Website -->
+    <div class="plat-card">
+      <div class="plat-head">
+        <div><div class="plat-name">Nazrah Studio</div><div class="plat-handle">nazrahstudio.netlify.app · Audited live</div></div>
+        <div class="plat-status"><div class="sdot" id="ws-sdot"></div><span id="ws-status-text" style="font-family:var(--mono);font-size:9px">Loading</span></div>
+      </div>
+      <div class="plat-body">
+        <div class="metrics-row">
+          <div class="mbox"><div class="ml">Health Score</div><div class="mv" id="ws-score">—</div></div>
+          <div class="mbox"><div class="ml">Title Tag</div><div class="mv" id="ws-title" style="font-size:10px">—</div></div>
+          <div class="mbox"><div class="ml">WhatsApp</div><div class="mv" id="ws-wa">—</div></div>
+          <div class="mbox"><div class="ml">Pricing Page</div><div class="mv" id="ws-pricing">—</div></div>
+          <div class="mbox"><div class="ml">Portfolio</div><div class="mv" id="ws-portfolio">—</div></div>
+          <div class="mbox"><div class="ml">Meta Desc</div><div class="mv" id="ws-meta">—</div></div>
+        </div>
+        <div class="issues" id="ws-issues"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- View trend chart -->
+  <div class="chart-card">
+    <div class="cc-title">Telegram Post View History</div>
+    <div class="cc-sub">Last 20 posts — view count per post number</div>
+    <div style="position:relative;height:180px"><canvas id="view-chart"></canvas></div>
+  </div>
+</div>
+
+<!-- REVENUE TAB -->
+<div class="panel" id="tab-revenue">
+  <div class="sh">Log Revenue</div>
+  <div class="rev-form">
+    <div class="rev-form-title">Add Revenue Entry</div>
+    <select class="rev-sel" id="rev-stream">
+      <option value="trading">Trading</option>
+      <option value="media">Nazrah Media</option>
+      <option value="nazrahai">Nazrah.AI</option>
+      <option value="fashion">AI Fashion</option>
+    </select>
+    <input type="number" class="rev-inp" id="rev-amount" placeholder="Amount ₹" style="width:120px">
+    <input type="text" class="rev-inp" id="rev-note" placeholder="Note (optional)" style="min-width:180px">
+    <button class="rev-submit" onclick="logRevenue()">Log ₹</button>
+  </div>
+
+  <div class="two-col" style="margin-bottom:16px">
+    <div class="card">
+      <div class="card-title">This Month — By Stream</div>
+      <div id="rev-breakdown" style="font-family:var(--mono);font-size:11px;color:var(--text2);line-height:2.2">Loading...</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Progress to ₹2L Goal</div>
+      <div id="rev-progress" style="font-family:var(--mono);font-size:11px;color:var(--text2);line-height:2.2">Loading...</div>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <div class="cc-title">Revenue History</div>
+    <div class="cc-sub">Monthly totals by stream</div>
+    <div style="position:relative;height:200px"><canvas id="rev-chart"></canvas></div>
+  </div>
+</div>
+
+<!-- HISTORY TAB -->
+<div class="panel" id="tab-history">
+  <div class="sh">Fetch Log — Last 10 Auto-Fetches</div>
+  <div id="fetch-log-table" style="font-family:var(--mono);font-size:10px;color:var(--text2)">Loading...</div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+const PASS = localStorage.getItem('dash_pass') || (() => {
+  const p = prompt('Dashboard password:');
+  if (p) localStorage.setItem('dash_pass', p);
+  return p;
+})();
+
+const API = (path, opts={}) => fetch('/api' + path, {
+  ...opts,
+  headers: { 'x-dashboard-password': PASS, 'Content-Type': 'application/json', ...(opts.headers||{}) },
+  body: opts.body ? JSON.stringify(opts.body) : undefined,
+}).then(r => r.json());
+
+// ── State ──────────────────────────────────────────────────────
+let dashData = null;
+let viewChart = null;
+let revChart  = null;
+
+// ── Boot ───────────────────────────────────────────────────────
+document.getElementById('top-date').textContent = new Date().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
+
+loadDashboard();
+setInterval(loadDashboard, 60000); // refresh every 60s
+
+// ── Load all data ──────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    dashData = await API('/dashboard');
+    if (dashData.error) { toast(dashData.error, 'error'); return; }
+    renderAll(dashData);
+  } catch(e) { toast('Backend offline — ' + e.message, 'error'); }
+}
+
+function renderAll(d) {
+  renderGoalBar(d.revenue);
+  renderKPIs(d);
+  renderTasks(d.tasks, d.taskCounts);
+  renderPlatforms(d.telegram, d.website);
+  renderViewChart(d.viewHistory);
+  renderRevenue(d.revenue);
+  renderFetchLog(d.fetchLog);
+  if (d.last_fetch) {
+    const dt = new Date(d.last_fetch);
+    document.getElementById('last-fetch-time').textContent = dt.toLocaleString('en-IN', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+// ── GOAL BAR ───────────────────────────────────────────────────
+function renderGoalBar(rev) {
+  if (!rev) return;
+  const total = rev.earned_total || 0;
+  const goal  = rev.goal || 200000;
+  const pct   = Math.min((total / goal) * 100, 100).toFixed(1);
+  document.getElementById('earned-disp').textContent = '₹' + total.toLocaleString('en-IN');
+  document.getElementById('gw-pct').textContent = pct + '%';
+  document.getElementById('gw-fill').style.width = pct + '%';
+}
+
+// ── KPIs ───────────────────────────────────────────────────────
+function renderKPIs(d) {
+  const tg = d.telegram;
+  const ws = d.website;
+  const tc = d.taskCounts;
+
+  if (tg) {
+    set('kpi-subs', tg.subscribers ?? '—');
+    set('kpi-subs-s', '@blockbullacademy · live');
+    set('kpi-views', tg.latest_post_views ?? '—');
+    set('kpi-views-s', `Post #${tg.latest_post_num || '?'} · fetched`);
+    const trend = tg.view_trend;
+    const trendEl = document.getElementById('kpi-trend');
+    trendEl.textContent = trend === 'declining' ? '↓ Declining' : trend === 'rising' ? '↑ Rising' : '→ Stable';
+    trendEl.className = 'kpi-v ' + (trend === 'declining' ? 'red' : trend === 'rising' ? 'green' : 'amber');
+    set('kpi-trend-s', `Avg: ${tg.avg_views_last10 || '?'} views/post`);
+  }
+  if (ws) {
+    const scoreEl = document.getElementById('kpi-wscore');
+    scoreEl.textContent = (ws.score ?? '—') + '/100';
+    scoreEl.className = 'kpi-v ' + (ws.score >= 70 ? 'green' : ws.score >= 40 ? 'amber' : 'red');
+    set('kpi-wscore-s', ws.score < 50 ? 'Critical issues found' : 'Some issues');
+  }
+  if (tc) {
+    set('kpi-tasks', tc.total_open ?? '—');
+    set('kpi-tasks-s', `${tc.critical} critical · ${tc.high} high`);
+    document.getElementById('lag-badge').textContent = (tc.total_open || 0) + ' lagging';
+  }
+}
+
+// ── TASKS ──────────────────────────────────────────────────────
+function renderTasks(tasks, counts) {
+  if (!tasks) return;
+  renderTaskGroup('crit-tasks', tasks.critical, 'critical');
+  renderTaskGroup('high-tasks', tasks.high, 'high');
+  renderTaskGroup('maint-tasks', tasks.maintenance, 'maintenance');
+  renderTaskGroup('done-tasks', tasks.done_today || [], 'done');
+  set('crit-count', (counts?.critical || 0) + ' open');
+  set('high-count', (counts?.high || 0) + ' open');
+  set('maint-count', (counts?.maintenance || 0) + ' open');
+  set('done-count', (counts?.done_today || 0) + ' done today');
+}
+
+function renderTaskGroup(elId, tasks, priority) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!tasks || tasks.length === 0) { el.innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:var(--text3);padding:8px 0">None</div>'; return; }
+  el.innerHTML = tasks.map(t => `
+    <div class="task ${t.done ? 'done' : ''}" id="task-${t.id}" onclick="toggleTask(${t.id}, ${t.done})">
+      <div class="task-cb">${t.done ? '✓' : ''}</div>
+      <div class="task-body">
+        <div class="task-title">${escHtml(t.title)}</div>
+        <div class="task-tags">
+          <span class="tag tag-${t.source || 'manual'}">${t.source || 'manual'}</span>
+          ${t.auto ? '<span class="tag tag-auto">auto-generated</span>' : '<span class="tag tag-manual">manual</span>'}
+          ${t.time_est ? `<span class="tag-time">${escHtml(t.time_est)}</span>` : ''}
+          <span class="task-del" onclick="event.stopPropagation();deleteTask(${t.id})">🗑</span>
+        </div>
+        ${t.detail ? `<div style="margin-top:6px;font-size:9px;color:var(--text3);line-height:1.5;padding:5px 8px;background:var(--bg4);border-radius:3px">${escHtml(t.detail)}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function toggleTask(id, currentDone) {
+  const done = currentDone ? 0 : 1;
+  const el = document.getElementById('task-' + id);
+  if (el) { el.style.opacity = '.5'; el.style.pointerEvents = 'none'; }
+  await API('/tasks/' + id + '/done', { method: 'PATCH', body: { done } });
+  toast(done ? '✓ Task marked complete' : 'Task reopened', 'success');
+  await loadDashboard();
+}
+
+async function deleteTask(id) {
+  if (!confirm('Delete this task?')) return;
+  await API('/tasks/' + id, { method: 'DELETE' });
+  toast('Task deleted', 'success');
+  await loadDashboard();
+}
+
+function showAddTask(priority) {
+  const form = document.getElementById('add-form-' + priority);
+  form.classList.toggle('show');
+}
+
+async function addTask(priority) {
+  const title  = document.getElementById('aft-title-' + priority).value.trim();
+  const source = document.getElementById('aft-source-' + priority).value;
+  const time   = document.getElementById('aft-time-' + priority).value.trim();
+  if (!title) { toast('Enter a task title', 'error'); return; }
+  await API('/tasks', { method: 'POST', body: { title, priority, source, time_est: time } });
+  document.getElementById('aft-title-' + priority).value = '';
+  document.getElementById('add-form-' + priority).classList.remove('show');
+  toast('Task added', 'success');
+  await loadDashboard();
+}
+
+// ── PLATFORMS ──────────────────────────────────────────────────
+function renderPlatforms(tg, ws) {
+  if (tg) {
+    set('tg-subs', tg.subscribers ?? '—');
+    set('tg-views', tg.latest_post_views ?? '—');
+    set('tg-avg', tg.avg_views_last10 ?? '—');
+    set('tg-posts', tg.latest_post_num ? tg.latest_post_num + '+' : '—');
+    set('tg-photos', tg.total_photos ?? '—');
+    const trendEl = document.getElementById('tg-trend');
+    trendEl.textContent = tg.view_trend || '—';
+    trendEl.className = 'mv ' + (tg.view_trend === 'declining' ? 'bad' : tg.view_trend === 'rising' ? 'good' : 'warn');
+    const sdot = document.getElementById('tg-sdot');
+    const statusText = document.getElementById('tg-status-text');
+    sdot.className = 'sdot ' + (tg.view_trend === 'rising' ? 'live' : tg.view_trend === 'declining' ? 'bad' : 'warn');
+    statusText.textContent = tg.view_trend === 'declining' ? 'Declining reach' : 'Active';
+    statusText.style.color = tg.view_trend === 'declining' ? 'var(--red2)' : 'var(--amber2)';
+    renderIssues('tg-issues', tg.issues);
+  }
+  if (ws) {
+    const sc = ws.score ?? 0;
+    const scoreEl = document.getElementById('ws-score');
+    scoreEl.textContent = sc + '/100';
+    scoreEl.className = 'mv ' + (sc >= 70 ? 'good' : sc >= 40 ? 'warn' : 'bad');
+    set('ws-title', ws.title_tag || 'missing');
+    document.getElementById('ws-title').className = 'mv ' + (ws.title_tag && ws.title_tag !== 'Package' ? 'good' : 'bad') + ' sm';
+    const waEl = document.getElementById('ws-wa');
+    waEl.textContent = ws.whatsapp_number ? '✓ Found' : '✗ Missing';
+    waEl.className = 'mv ' + (ws.whatsapp_number ? 'good' : 'bad');
+    const pcEl = document.getElementById('ws-pricing');
+    const pfEl = document.getElementById('ws-portfolio');
+    const pc = ws.page_checks?.['/pricing'];
+    const pf = ws.page_checks?.['/portfolio'];
+    pcEl.textContent = pc ? '✓ Live' : '✗ Empty';
+    pcEl.className = 'mv ' + (pc ? 'good' : 'bad');
+    pfEl.textContent = pf ? '✓ Live' : '✗ Empty';
+    pfEl.className = 'mv ' + (pf ? 'good' : 'bad');
+    const metaEl = document.getElementById('ws-meta');
+    metaEl.textContent = ws.has_meta_description ? '✓ Yes' : '✗ No';
+    metaEl.className = 'mv ' + (ws.has_meta_description ? 'good' : 'bad');
+    const sdot = document.getElementById('ws-sdot');
+    const stxt = document.getElementById('ws-status-text');
+    sdot.className = 'sdot ' + (sc >= 70 ? 'live' : sc >= 40 ? 'warn' : 'bad');
+    stxt.textContent = 'Score: ' + sc + '/100';
+    stxt.style.color = sc >= 70 ? 'var(--green2)' : sc >= 40 ? 'var(--amber2)' : 'var(--red2)';
+    renderIssues('ws-issues', ws.issues);
+  }
+}
+
+function renderIssues(elId, issues) {
+  const el = document.getElementById(elId);
+  if (!el || !issues) return;
+  el.innerHTML = issues.slice(0, 4).map(i => `
+    <div class="issue ${i.severity === 'critical' ? 'fail' : i.severity === 'high' ? 'warn' : 'pass'}">
+      <div class="issue-ic">${i.severity === 'critical' ? '✗' : i.severity === 'high' ? '!' : '✓'}</div>
+      <div><div class="issue-t">${escHtml(i.title)}</div><div class="issue-d">${escHtml(i.desc || '')}</div></div>
+    </div>
+  `).join('');
+}
+
+// ── VIEW CHART ─────────────────────────────────────────────────
+function renderViewChart(history) {
+  if (!history || !history.length) return;
+  const sorted = [...history].sort((a, b) => a.post_num - b.post_num);
+  const labels = sorted.map(p => '#' + p.post_num);
+  const data   = sorted.map(p => p.views);
+  const colors = data.map(v => v >= 15 ? '#30b060' : v >= 10 ? '#c08010' : '#d84040');
+
+  if (viewChart) viewChart.destroy();
+  viewChart = new Chart(document.getElementById('view-chart'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 3, borderSkipped: false }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#44445a', font: { family: 'IBM Plex Mono', size: 8 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#44445a', font: { family: 'IBM Plex Mono', size: 9 } }, beginAtZero: true },
+      },
+    }
+  });
+}
+
+// ── REVENUE ────────────────────────────────────────────────────
+function renderRevenue(rev) {
+  if (!rev) return;
+  const streams = { trading: 'Trading', media: 'Nazrah Media', nazrahai: 'Nazrah.AI', fashion: 'AI Fashion' };
+  const colors  = { trading: 'var(--gold2)', media: 'var(--teal2)', nazrahai: 'var(--coral2)', fashion: 'var(--purple2)' };
+
+  let breakdownHtml = '';
+  let total = 0;
+  for (const [k, label] of Object.entries(streams)) {
+    const amt = rev.by_stream?.[k] || 0;
+    total += amt;
+    breakdownHtml += `<div style="display:flex;justify-content:space-between"><span style="color:${colors[k]}">${label}</span><span>₹${amt.toLocaleString('en-IN')}</span></div>`;
+  }
+  breakdownHtml += `<div style="display:flex;justify-content:space-between;border-top:1px solid var(--border2);margin-top:8px;padding-top:8px"><span style="color:var(--text)">Total this month</span><span style="color:var(--gold2)">₹${total.toLocaleString('en-IN')}</span></div>`;
+  set('rev-breakdown', breakdownHtml, true);
+
+  const earned = rev.earned_total || 0;
+  const goal   = rev.goal || 200000;
+  const remaining = Math.max(0, goal - earned);
+  set('rev-progress', `
+    <div style="display:flex;justify-content:space-between"><span>Earned</span><span style="color:var(--green2)">₹${earned.toLocaleString('en-IN')}</span></div>
+    <div style="display:flex;justify-content:space-between"><span>Remaining</span><span style="color:var(--red2)">₹${remaining.toLocaleString('en-IN')}</span></div>
+    <div style="display:flex;justify-content:space-between"><span>Goal</span><span style="color:var(--gold2)">₹${goal.toLocaleString('en-IN')}</span></div>
+  `, true);
+
+  // Revenue chart
+  const history = rev.history || [];
+  const months = [...new Set(history.map(r => r.month))].sort().slice(-6);
+  const streamKeys = ['trading', 'media', 'nazrahai', 'fashion'];
+  const streamColors = ['#d4920a', '#0d9e96', '#c04030', '#6040c0'];
+  const streamLabels = ['Trading', 'Media', 'Nazrah.AI', 'Fashion'];
+
+  const datasets = streamKeys.map((k, i) => ({
+    label: streamLabels[i],
+    data: months.map(m => {
+      const r = history.find(h => h.month === m && h.stream === k);
+      return r ? r.total : 0;
+    }),
+    backgroundColor: streamColors[i] + 'cc',
+    borderRadius: 3,
+  }));
+
+  if (revChart) revChart.destroy();
+  if (document.getElementById('rev-chart')) {
+    revChart = new Chart(document.getElementById('rev-chart'), {
+      type: 'bar',
+      data: { labels: months, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { stacked: true, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#44445a', font: { family: 'IBM Plex Mono', size: 9 } } },
+          y: { stacked: true, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#44445a', font: { family: 'IBM Plex Mono', size: 9 }, callback: v => '₹' + (v/1000).toFixed(0) + 'K' } },
+        },
+      }
+    });
+  }
+}
+
+async function logRevenue() {
+  const stream = document.getElementById('rev-stream').value;
+  const amount = document.getElementById('rev-amount').value;
+  const note   = document.getElementById('rev-note').value;
+  if (!amount || parseInt(amount) <= 0) { toast('Enter a valid amount', 'error'); return; }
+  const r = await API('/revenue', { method: 'POST', body: { stream, amount: parseInt(amount), note } });
+  if (r.success) {
+    document.getElementById('rev-amount').value = '';
+    document.getElementById('rev-note').value = '';
+    toast(`₹${parseInt(amount).toLocaleString('en-IN')} logged for ${stream}`, 'success');
+    await loadDashboard();
+  } else toast(r.error, 'error');
+}
+
+// ── FETCH LOG ──────────────────────────────────────────────────
+function renderFetchLog(log) {
+  const el = document.getElementById('fetch-log-table');
+  if (!el || !log) return;
+  if (!log.length) { el.innerHTML = '<div style="color:var(--text3)">No fetches yet</div>'; return; }
+  el.innerHTML = `
+    <table style="width:100%;border-collapse:collapse">
+      <thead><tr>
+        <th style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:left;color:var(--text3);font-size:8px;letter-spacing:.1em">Time</th>
+        <th style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:left;color:var(--text3);font-size:8px;letter-spacing:.1em">Status</th>
+        <th style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:left;color:var(--text3);font-size:8px;letter-spacing:.1em">Tasks Generated</th>
+        <th style="padding:6px 10px;border-bottom:1px solid var(--border);text-align:left;color:var(--text3);font-size:8px;letter-spacing:.1em">Error</th>
+      </tr></thead>
+      <tbody>
+        ${log.map(l => `<tr>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text2)">${new Date(l.started_at).toLocaleString('en-IN')}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border)">${l.success ? '<span style="color:var(--green2)">✓ OK</span>' : '<span style="color:var(--red2)">✗ Failed</span>'}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border);color:var(--teal2)">${l.tasks_generated || 0}</td>
+          <td style="padding:6px 10px;border-bottom:1px solid var(--border);color:var(--red3);font-size:9px">${l.error || '—'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+// ── MANUAL FETCH ───────────────────────────────────────────────
+async function triggerFetch() {
+  const btn = document.getElementById('fetch-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin">⟳</span> Fetching...';
+  btn.className = 'fetch-btn loading';
+  document.getElementById('fetch-status-label').textContent = 'Fetching Telegram + Website...';
+
+  try {
+    const r = await API('/fetch', { method: 'POST' });
+    if (r.success) {
+      toast(`✓ Fetched. ${r.tasksGenerated} new tasks generated.`, 'success');
+      document.getElementById('fetch-status-label').textContent = `✓ Done · ${r.tasksGenerated} tasks added`;
+    } else {
+      toast('Fetch failed: ' + r.error, 'error');
+      document.getElementById('fetch-status-label').textContent = '✗ Failed';
+    }
+    await loadDashboard();
+  } catch(e) {
+    toast('Fetch error: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span>⟳</span> Refresh Now';
+    btn.className = 'fetch-btn';
+  }
+}
+
+// ── TAB SWITCHING ──────────────────────────────────────────────
+function sw(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── UTILS ──────────────────────────────────────────────────────
+function set(id, val, isHtml=false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (isHtml) el.innerHTML = val;
+  else el.textContent = val;
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let toastTimer;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = 'toast', 3000);
+}
+</script>
+</body>
+</html>
